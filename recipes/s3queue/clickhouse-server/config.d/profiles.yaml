@@ -1,0 +1,6 @@
+profiles:
+  default:
+    # min_insert_block_size_rows: 1000
+    # min_insert_block_size_bytes: 2000
+    min_insert_block_size_rows_for_materialized_views: 1000
+    min_insert_block_size_bytes_for_materialized_views: 2000
