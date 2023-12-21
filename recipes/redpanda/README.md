@@ -2,7 +2,7 @@
 
 In this recipe, we'll learn how to ingest data from Redpanda into ClickHouse.
 
-## Setup Redpanda
+## Setup Redpanda
 
 Launch cluster
 
