@@ -50,6 +50,7 @@ Launch ClickHouse Local
 
 ```bash
 ./clickhouse local -m --path wiki.chdb
+```
 
 Create database
 
