@@ -52,9 +52,11 @@ SELECT
 
 ### Using Joda syntax
 
+(_Doesn't support fractional seconds_)
+
 See [syntax documentation](https://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html)
 
-_Doesn't support fractional seconds_
+
 
 ```sql
 WITH '2023-12-21T00:01:13' AS dateString
