@@ -50,7 +50,7 @@ SELECT
     parseDateTime(dateString, '%F') AS date;
 ```
 
-### Using Joda syntax
+### Using Joda syntax
 
 See [syntax documentation](https://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html)
 
