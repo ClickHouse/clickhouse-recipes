@@ -36,6 +36,8 @@ SELECT bid, ask, bid - ask AS diff
 LIMIT 10;
 ```
 
+**Don't do this!**
+
 Instead, use the [`toDecimal32`](https://clickhouse.com/docs/en/sql-reference/functions/type-conversion-functions#todecimal3264128256) or [`toDecimal64`](https://clickhouse.com/docs/en/sql-reference/functions/type-conversion-functions#todecimal3264128256) functions.
 The second parameter of this function is the number of decimal places.
 
