@@ -1,6 +1,7 @@
 # Remote querying Parquet files with ClickHouse
 
-In this recipe, we'll learn how to query remote Parquet files with ClickHouse
+In this recipe, we'll learn how to query remote Parquet files with ClickHouse.
+When querying remote files, ClickHouse only pulls down the data required to answer the query i.e. it doesn't pull down the whole file if you only ask for a few columns.
 
 ## Download Clickhouse
 
