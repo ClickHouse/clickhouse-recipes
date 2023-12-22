@@ -13,7 +13,7 @@ curl https://clickhouse.com/ | sh
 Launch ClickHouse Local
 
 ```bash
-./clickhouse local -m --path trips.chdb
+./clickhouse local -m
 ```
 
 ## Exporting to Parquet
