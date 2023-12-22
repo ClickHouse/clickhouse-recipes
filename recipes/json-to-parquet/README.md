@@ -21,18 +21,18 @@ Launch ClickHouse Local
 Count the number of records
 
 ```sql
-FROM 'data/movies.json' SELECT count();
+FROM 'data/movies.json.gz' SELECT count();
 ```
 
 Explore the record structure
 
 ```sql
-DESCRIBE 'data/movies.json'
+DESCRIBE 'data/movies.json.gz'
 SETTINGS describe_compact_output=1;
 ```
 
 ```sql
-FROM 'data/movies.json' 
+FROM 'data/movies.json.gz' 
 SELECT *
 LIMIT 1
 Format Vertical;
@@ -43,7 +43,7 @@ Format Vertical;
 One file
 
 ```sql
-FROM 'data/movies.json' 
+FROM 'data/movies.json.gz' 
 SELECT *
 INTO OUTFILE 'data/movies.parquet' 
 FORMAT Parquet;
@@ -56,7 +56,7 @@ INSERT INTO FUNCTION
 file('data/movies_lang_{_partition_id}.parquet', 'Parquet') 
 PARTITION BY original_language
 select *
-from file('data/movies.json');
+from file('data/movies.json.gz');
 ```
 
 Partition by vote average buckets
@@ -72,5 +72,5 @@ PARTITION BY multiIf(
     toString(floor(vote_average)) || '-' || toString(ceil(vote_average))
 )
 select *
-from file('data/movies.json');
+from file('data/movies.json.gz');
 ```
