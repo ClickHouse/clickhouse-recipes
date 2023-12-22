@@ -1,1 +1,2 @@
 clickhouse
+recipes/export-parquet-row-size/data/*.parquet
