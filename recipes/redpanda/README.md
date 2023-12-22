@@ -37,6 +37,13 @@ Check that it's ingesting
 kcat -C -b localhost:9092 -t wiki_events -Kø
 ```
 
+## Download Clickhouse
+
+```bash
+curl https://clickhouse.com/ | sh
+```
+
+
 ## Setup ClickHouse
 
 Launch ClickHouse Local
