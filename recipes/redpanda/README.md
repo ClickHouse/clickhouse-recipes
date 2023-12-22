@@ -2,6 +2,13 @@
 
 In this recipe, we'll learn how to ingest data from Redpanda into ClickHouse.
 
+## Install kcat and rpk
+
+We're going to be using kcat and rpk, so you'll need to install those tools.
+
+* [Install kcat](https://github.com/edenhill/kcat)
+* [Install rpk](https://docs.redpanda.com/current/get-started/rpk-install/)
+
 ## Setup Redpanda
 
 Launch cluster
@@ -13,15 +20,21 @@ docker compose up
 Create topic
 
 ```bash
-rpk topic describe wiki_events -p
+rpk topic create wiki_events -p 5
 ```
 
-Ingest Wikimedia recent changes stream
+Ingest the Wikimedia recent changes stream
 
 ```bash
 curl -N https://stream.wikimedia.org/v2/stream/recentchange |
 awk '/^data: /{gsub(/^data: /, ""); print}' |
 kcat -P -b localhost:9092 -t wiki_events -Kø
+```
+
+Check that it's ingesting
+
+```bash
+kcat -C -b localhost:9092 -t wiki_events -Kø
 ```
 
 ## Setup ClickHouse
