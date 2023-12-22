@@ -8,3 +8,4 @@ This repository contains sample code for solving common problems with ClickHouse
 * [SQL Dynamic Column Selection](recipes/sql-dynamic-column-selection/README.md)
 * [Remote querying Parquet files](recipes/parquet-remote-querying/README.md)
 * [Working with monetary values](recipes/monetary-values/README.md)
+* [Parsing DateTime strings](recipes/datetime-strings/README.md)
