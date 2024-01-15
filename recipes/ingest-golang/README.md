@@ -58,7 +58,7 @@ wget https://datasets-documentation.s3.eu-west-3.amazonaws.com/ookla/performance
 
 ## Ingest data
 
-main.go[main.go^] contains code that iterates over the CSV file and ingests into ClickHouse in batches of 1,000 records.
+[main.go](main.go) contains code that iterates over the CSV file and ingests into ClickHouse in batches of 1,000 records.
 
 ```bash
 time go run main.go
