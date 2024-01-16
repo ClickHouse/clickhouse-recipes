@@ -11,9 +11,10 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"sync"
 )
 
-func connect(host string) (driver.Conn, error) {
+func connectToClickHouse(host string) (driver.Conn, error) {
 	var (
 		ctx       = context.Background()
 		conn, err = clickhouse.Open(&clickhouse.Options{
@@ -38,56 +39,17 @@ func connect(host string) (driver.Conn, error) {
 	return conn, nil
 }
 
-func main() {
-	gzFile, err := os.Open("performance.csv.gz")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer gzFile.Close()
-
-	gzReader, err := gzip.NewReader(gzFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer gzReader.Close()
-
-	csvReader := csv.NewReader(gzReader)
-	rowChan := make(chan []string)
-
-	go func() {
-		defer close(rowChan)
-
-		if _, err := csvReader.Read(); err != nil {
-			log.Fatal(err)
-		}
-
-		for {
-			record, err := csvReader.Read()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				log.Fatal(err)
-			}
-			rowChan <- record
-		}
-	}()
-
-	conn, err := connect("localhost:9000")
-	if err != nil {
-		panic(err)
-	}
-
-	ctx := context.Background()
+func ingestRecords(wg *sync.WaitGroup, rowChan <-chan []string, conn driver.Conn, batchSize int) {
+	defer wg.Done()
 
 	newBatch := func() driver.Batch {
+		ctx := context.Background()
 		batch, err := conn.PrepareBatch(ctx, "INSERT INTO performance")
 		if err != nil {
 			panic(err)
 		}
 		return batch
 	}
-
 	batch := newBatch()
 	recordsProcessed := 0
 	for row := range rowChan {
@@ -110,20 +72,72 @@ func main() {
 			tests, devices,
 		)
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 
 		recordsProcessed++
 
-		if recordsProcessed%10000 == 0 {
+		if recordsProcessed%batchSize == 0 {
 			if err := batch.Send(); err != nil {
-				panic(err)
+				log.Fatal(err)
 			}
 			batch = newBatch()
 		}
 	}
 
 	if err := batch.Send(); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
+}
+
+func readCSVToChannel(filePath string, rowChan chan<- []string) {
+	gzFile, err := os.Open(filePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer gzFile.Close()
+
+	gzReader, err := gzip.NewReader(gzFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer gzReader.Close()
+
+	csvReader := csv.NewReader(gzReader)
+
+	defer close(rowChan)
+
+	if _, err := csvReader.Read(); err != nil { // Skip header or handle error
+		log.Fatal(err)
+	}
+
+	for {
+		record, err := csvReader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+		rowChan <- record
+	}
+}
+
+func main() {
+	rowChan := make(chan []string)
+	go readCSVToChannel("performance.csv.gz", rowChan)
+
+	conn, err := connectToClickHouse("localhost:9000")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var wg sync.WaitGroup
+	const numWorkers = 5
+	for i := 0; i < numWorkers; i++ {
+		wg.Add(1)
+		go ingestRecords(&wg, rowChan, conn, 10_000)
+	}
+
+	wg.Wait()
 }
