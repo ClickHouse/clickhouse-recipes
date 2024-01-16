@@ -2,42 +2,41 @@ package main
 
 import (
 	"compress/gzip"
+	"context"
 	"encoding/csv"
 	"fmt"
+	"github.com/ClickHouse/clickhouse-go/v2"
+	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 	"io"
 	"log"
 	"os"
 	"strconv"
-	"context"
-	"github.com/ClickHouse/clickhouse-go/v2"
-	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 )
 
 func connect() (driver.Conn, error) {
-    var (
-        ctx = context.Background()
-        conn, err = clickhouse.Open(&clickhouse.Options{
-            Addr: []string{"localhost:9000"},
-            Auth: clickhouse.Auth{
-                Database: "default",
-                Username: "default",
-            },
-        })
-    )
+	var (
+		ctx       = context.Background()
+		conn, err = clickhouse.Open(&clickhouse.Options{
+			Addr: []string{"localhost:9000"},
+			Auth: clickhouse.Auth{
+				Database: "default",
+				Username: "default",
+			},
+		})
+	)
 
-    if err != nil {
-        return nil, err
-    }
+	if err != nil {
+		return nil, err
+	}
 
-    if err := conn.Ping(ctx); err != nil {
-        if exception, ok := err.(*clickhouse.Exception); ok {
-            fmt.Printf("Exception [%d] %s \n%s\n", exception.Code, exception.Message, exception.StackTrace)
-        }
-        return nil, err
-    }
-    return conn, nil
+	if err := conn.Ping(ctx); err != nil {
+		if exception, ok := err.(*clickhouse.Exception); ok {
+			fmt.Printf("Exception [%d] %s \n%s\n", exception.Code, exception.Message, exception.StackTrace)
+		}
+		return nil, err
+	}
+	return conn, nil
 }
-
 
 func main() {
 	gzFile, err := os.Open("performance.csv.gz")
@@ -75,23 +74,23 @@ func main() {
 	}()
 
 	conn, err := connect()
-    if err != nil {
-        panic((err))
-    }
+	if err != nil {
+		panic((err))
+	}
 
 	ctx := context.Background()
 
-    newBatch := func() driver.Batch {
-        batch, err := conn.PrepareBatch(ctx, "INSERT INTO performance")
-        if err != nil {
-            panic(err)
-        }
-        return batch
-    }
+	newBatch := func() driver.Batch {
+		batch, err := conn.PrepareBatch(ctx, "INSERT INTO performance")
+		if err != nil {
+			panic(err)
+		}
+		return batch
+	}
 
 	batch := newBatch()
-	
-	batchSize :=0
+
+	batchSize := 0
 	for row := range rowChan {
 		tileX, _ := strconv.ParseFloat(row[2], 32)
 		tileY, _ := strconv.ParseFloat(row[3], 32)
@@ -115,13 +114,13 @@ func main() {
 
 		batchSize++
 
-		if(batchSize >= 1000){
-            if err := batch.Send(); err != nil {
-                panic(err)
-            }
-            batch = newBatch()
-            batchSize = 0
-		}	
+		if batchSize >= 1000 {
+			if err := batch.Send(); err != nil {
+				panic(err)
+			}
+			batch = newBatch()
+			batchSize = 0
+		}
 	}
 
 	if batchSize > 0 {
