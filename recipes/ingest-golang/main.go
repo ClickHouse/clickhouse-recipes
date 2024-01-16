@@ -13,11 +13,11 @@ import (
 	"strconv"
 )
 
-func connect() (driver.Conn, error) {
+func connect(host string) (driver.Conn, error) {
 	var (
 		ctx       = context.Background()
 		conn, err = clickhouse.Open(&clickhouse.Options{
-			Addr: []string{"localhost:9000"},
+			Addr: []string{host},
 			Auth: clickhouse.Auth{
 				Database: "default",
 				Username: "default",
@@ -73,9 +73,9 @@ func main() {
 		}
 	}()
 
-	conn, err := connect()
+	conn, err := connect("localhost:9000")
 	if err != nil {
-		panic((err))
+		panic(err)
 	}
 
 	ctx := context.Background()
@@ -89,9 +89,9 @@ func main() {
 	}
 
 	batch := newBatch()
-
-	batchSize := 0
+	recordsProcessed := 0
 	for row := range rowChan {
+		quadKey := row[0]
 		tileX, _ := strconv.ParseFloat(row[2], 32)
 		tileY, _ := strconv.ParseFloat(row[3], 32)
 		downloadSpeedKbps, _ := strconv.ParseUint(row[4], 10, 32)
@@ -102,30 +102,28 @@ func main() {
 		tests, _ := strconv.ParseUint(row[9], 10, 32)
 		devices, _ := strconv.ParseUint(row[10], 10, 16)
 
-		batchErr := batch.Append(
+		err := batch.Append(
+			quadKey,
 			tileX, tileY,
 			downloadSpeedKbps, uploadSpeedKbps,
 			latencyMs, downloadLatencyMs, uploadLatencyMs,
 			tests, devices,
 		)
-		if batchErr != nil {
-			panic(batchErr)
+		if err != nil {
+			panic(err)
 		}
 
-		batchSize++
+		recordsProcessed++
 
-		if batchSize >= 1000 {
+		if recordsProcessed%10000 == 0 {
 			if err := batch.Send(); err != nil {
 				panic(err)
 			}
 			batch = newBatch()
-			batchSize = 0
 		}
 	}
 
-	if batchSize > 0 {
-		if err := batch.Send(); err != nil {
-			panic(err)
-		}
+	if err := batch.Send(); err != nil {
+		panic(err)
 	}
 }
