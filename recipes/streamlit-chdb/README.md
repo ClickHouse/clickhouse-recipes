@@ -27,7 +27,7 @@ Launch ClickHouse Local
 ```
 
 
-## Ingest data
+## Ingest data
 
 ```sql
 CREATE DATABASE energy;
