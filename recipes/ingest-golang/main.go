@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/csv"
+	"flag"
 	"fmt"
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
@@ -124,6 +125,10 @@ func readCSVToChannel(filePath string, rowChan chan<- []string) {
 }
 
 func main() {
+	batchSize := flag.Int("batchSize", 10000, "Size of the batch for processing records")
+	numWorkers := flag.Int("numWorkers", 5, "Number of concurrent workers")
+	flag.Parse()
+
 	rowChan := make(chan []string)
 	go readCSVToChannel("performance.csv.gz", rowChan)
 
@@ -133,10 +138,9 @@ func main() {
 	}
 
 	var wg sync.WaitGroup
-	const numWorkers = 5
-	for i := 0; i < numWorkers; i++ {
+	for i := 0; i < *numWorkers; i++ {
 		wg.Add(1)
-		go ingestRecords(&wg, rowChan, conn, 10_000)
+		go ingestRecords(&wg, rowChan, conn, *batchSize)
 	}
 
 	wg.Wait()
