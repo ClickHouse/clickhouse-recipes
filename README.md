@@ -10,3 +10,4 @@ This repository contains sample code for solving common problems with ClickHouse
 * [Parsing DateTime strings](recipes/datetime-strings/README.md)
 * [Converting JSON to Parquet](recipes/json-to-parquet/README.md)
 * [Export to Parquet based on row size](recipes/export-parquet-row-size/README.md)
+* [Interactive Strealit app with chdb](recipes/streamlit-chdb/README.md)
